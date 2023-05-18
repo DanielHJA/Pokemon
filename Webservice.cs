@@ -1,7 +1,6 @@
 namespace API
 {
     using System.Net.Http;
-    using Newtonsoft.Json.Linq;
     using System.Threading.Tasks;
     using Newtonsoft.Json;
 
@@ -9,57 +8,71 @@ namespace API
     {
         public static async Task<Result<T>> Fetch(string url)
         {
-            try
+            using (HttpClient client = new HttpClient())
             {
-                using (HttpClient client = new HttpClient())
+                HttpResponseMessage res = new HttpResponseMessage();
+
+                try
                 {
-                    HttpResponseMessage res = new HttpResponseMessage();
+                    res = await client.GetAsync(url);
+                }
+                catch(Exception exception)
+                {
+                    return Result(default(T), exception, false); 
+                }
+
+                if(res.IsSuccessStatusCode)
+                {
+                    HttpContent content = res.Content;
+                    string? data = String.Empty;
 
                     try
                     {
-                        res = await client.GetAsync(url);
+                        data = await content.ReadAsStringAsync();
                     }
-                    catch(Exception e)
+                    catch(Exception exception)
                     {
-                        Console.WriteLine("Something went wrong while trying to fetch the data: " + e.Message);
+                        return Result(default(T), exception, false); 
                     }
-
-                    if(res.IsSuccessStatusCode)
+                    
+                    if(data != null)
                     {
-                        HttpContent content = res.Content;
-                        var data = await content.ReadAsStringAsync();
-
-                        if(data != null)
+                        try
                         {
-                            try
-                            {
-                                T? pokemon = JsonConvert.DeserializeObject<T>(data);
-                                return new Result<T>(pokemon, null, true); 
-                            }
-                            catch(Exception e)
-                            {
-                                Console.WriteLine("Something went wrong while trying to serialize the data: " + e.Message);
-                                return new Result<T>(default(T), e.Message, false); 
-                            }
+                            T? pokemon = JsonConvert.DeserializeObject<T>(data);
+                            return Result(pokemon, true);
                         }
-                        else
+                        catch(Exception exception)
                         {
-                            Console.WriteLine("No data");
-                            return new Result<T>(default(T), "No data", false); 
+                            return Result(default(T), exception, false); 
                         }
-                    } 
+                    }
                     else
                     {
-                        Console.WriteLine("Unable to fetch data");
-                        return new Result<T>(default(T), "Unable to fetch data", false); 
+                        return Result(default(T), "No data", false); 
                     }
+                } 
+                else
+                {
+                    return Result(default(T), "Unable to fetch data", false); 
                 }
-            } 
-            catch(HttpRequestException e)
-            {
-                Console.WriteLine("Something went wrong while trying to fetch data: " + e.Message);
-                return new Result<T>(default(T), e.Message, false); 
             }
+        } 
+    
+        public static Result<T> Result(T? obj, bool success)
+        {
+            return new Result<T>(obj, null, success); 
+        }
+
+        public static Result<T> Result(T? obj, Exception? exception, bool success)
+        {
+            return new Result<T>(obj, exception, success); 
+        }
+
+        public static Result<T> Result(T? obj, string exceptionString, bool success)
+        {
+            var exception = new Exception(exceptionString);
+            return new Result<T>(obj, exception, success); 
         }
     }
 }

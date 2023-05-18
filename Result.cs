@@ -4,12 +4,12 @@ namespace API
     {
         public T? Data {get; set;}
         public bool Success {get; set;}
-        public string? Message {get; set;}
+        public Exception? Exception {get; set;}
 
-        public Result(T? data, string? message, bool success)
+        public Result(T? data, Exception? exception, bool success)
         {
             Data = data;
-            Message = message;
+            Exception = exception;
             Success = success;
         }
     }
