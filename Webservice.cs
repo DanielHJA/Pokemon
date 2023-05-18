@@ -18,7 +18,7 @@ namespace API
                 }
                 catch(Exception exception)
                 {
-                    return Result(default(T), exception, false); 
+                    return Result(default(T), exception, -2, false); 
                 }
 
                 if(res.IsSuccessStatusCode)
@@ -32,7 +32,7 @@ namespace API
                     }
                     catch(Exception exception)
                     {
-                        return Result(default(T), exception, false); 
+                        return Result(default(T), exception, -4, false); 
                     }
                     
                     if(data != null)
@@ -44,17 +44,17 @@ namespace API
                         }
                         catch(Exception exception)
                         {
-                            return Result(default(T), exception, false); 
+                            return Result(default(T), exception, -3, false); 
                         }
                     }
                     else
                     {
-                        return Result(default(T), "No data", false); 
+                        return Result(default(T), "No data", -2, false); 
                     }
                 } 
                 else
                 {
-                    return Result(default(T), "Unable to fetch data", false); 
+                    return Result(default(T), "Unable to fetch data", -1, false); 
                 }
             }
         } 
@@ -64,14 +64,15 @@ namespace API
             return new Result<T>(obj, null, success); 
         }
 
-        public static Result<T> Result(T? obj, Exception? exception, bool success)
+        public static Result<T> Result(T? obj, Exception exception, int errorCode, bool success)
         {
-            return new Result<T>(obj, exception, success); 
+            CustomException e = new CustomException(exception.Message, errorCode); 
+            return new Result<T>(obj, e, success); 
         }
 
-        public static Result<T> Result(T? obj, string exceptionString, bool success)
+        public static Result<T> Result(T? obj, string exceptionString, int errorCode, bool success)
         {
-            var exception = new Exception(exceptionString);
+            var exception = new CustomException(exceptionString, errorCode);
             return new Result<T>(obj, exception, success); 
         }
     }

@@ -4,9 +4,9 @@ namespace API
     {
         public T? Data {get; set;}
         public bool Success {get; set;}
-        public Exception? Exception {get; set;}
+        public CustomException? Exception {get; set;}
 
-        public Result(T? data, Exception? exception, bool success)
+        public Result(T? data, CustomException? exception, bool success)
         {
             Data = data;
             Exception = exception;
